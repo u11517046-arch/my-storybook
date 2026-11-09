@@ -1,0 +1,875 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>我的繪本</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --bg: #f5f0e8;
+    --paper: #fffdf8;
+    --ink: #44372e;
+    --muted: #8b7b6d;
+    --accent: #886449;
+    --line: #e8dfd3;
+}
+
+body {
+    margin: 0;
+    font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+}
+
+/* 頁面 */
+
+header {
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 5%;
+    background: rgba(255,253,248,.92);
+    border-bottom: 1px solid var(--line);
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+.logo span {
+    color: var(--accent);
+}
+
+.header-right {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+}
+
+/* 主畫面 */
+
+main {
+    max-width: 1250px;
+    margin: auto;
+    padding: 28px 24px;
+}
+
+.intro {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    margin-bottom: 20px;
+}
+
+.intro h1 {
+    font-size: clamp(24px, 4vw, 36px);
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: 2px;
+}
+
+.intro p {
+    color: var(--muted);
+    font-size: 13px;
+    margin: 8px 0 0;
+}
+
+.chapter {
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 2px;
+}
+
+/* 閱讀區 */
+
+.reader {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 15px 50px rgba(72,49,29,.06);
+}
+
+/* 大圖片 */
+
+.picture-area {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 65vh;
+    padding: 20px;
+    background: #eee5d8;
+}
+
+#bookImage {
+    display: block;
+    width: 100%;
+    height: 65vh;
+    object-fit: contain;
+    transition: opacity .2s ease;
+}
+
+/* 圖片載入失敗 */
+
+.image-error {
+    display: none;
+    text-align: center;
+    padding: 40px;
+    color: var(--muted);
+}
+
+/* 圖片角落頁數 */
+
+.image-page {
+    position: absolute;
+    bottom: 20px;
+    right: 22px;
+    background: rgba(255,253,248,.9);
+    padding: 7px 13px;
+    border-radius: 20px;
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+
+/* 翻頁控制 */
+
+.controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px;
+}
+
+.page-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#currentPage {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+#totalPage {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.progress {
+    width: 100px;
+    height: 3px;
+    background: #e8dfd3;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#progressBar {
+    height: 100%;
+    width: 5%;
+    background: var(--accent);
+    transition: width .3s;
+}
+
+.buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+button {
+    font-family: inherit;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.arrow {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 20px;
+}
+
+.arrow:hover {
+    background: var(--accent);
+    color: white;
+}
+
+.arrow:disabled {
+    opacity: .3;
+    cursor: not-allowed;
+}
+
+/* 音訊設定 */
+
+.audio-section {
+    border-top: 1px solid var(--line);
+    padding: 0 24px 18px;
+}
+
+.audio-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+
+.audio-toggle button {
+    border: none;
+    background: transparent;
+    color: var(--accent);
+    font-size: 12px;
+}
+
+.audio-content {
+    display: none;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.audio-content.show {
+    display: grid;
+}
+
+.audio-card {
+    background: #f8f3eb;
+    padding: 14px;
+    border-radius: 12px;
+}
+
+.audio-card label {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 10px;
+    color: var(--muted);
+}
+
+audio {
+    width: 100%;
+    height: 34px;
+}
+
+/* 頁碼選擇 */
+
+.page-selector {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.page-selector summary {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 12px;
+}
+
+.page-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 7px;
+    padding: 12px;
+}
+
+.page-list button {
+    border: 1px solid var(--line);
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 20px;
+    padding: 7px 12px;
+    font-size: 12px;
+}
+
+.page-list button.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+
+/* 底部 */
+
+footer {
+    text-align: center;
+    padding: 30px 15px;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 1px;
+}
+
+/* 手機 */
+
+@media (max-width: 650px) {
+
+    header {
+        height: 60px;
+        padding: 0 18px;
+    }
+
+    .logo {
+        font-size: 17px;
+    }
+
+    main {
+        padding: 15px 10px;
+    }
+
+    .intro {
+        margin-bottom: 14px;
+    }
+
+    .intro p {
+        font-size: 11px;
+    }
+
+    .reader {
+        border-radius: 14px;
+    }
+
+    .picture-area {
+        min-height: 48vh;
+        padding: 8px;
+    }
+
+    #bookImage {
+        height: 48vh;
+    }
+
+    .controls {
+        padding: 14px;
+    }
+
+    .progress {
+        width: 50px;
+    }
+
+    .arrow {
+        width: 40px;
+        height: 40px;
+    }
+
+    .audio-section {
+        padding: 0 14px 14px;
+    }
+
+    .audio-content.show {
+        grid-template-columns: 1fr;
+    }
+
+}
+</style>
+</head>
+
+<body>
+
+<header>
+
+    <div class="logo">
+        MY <span>STORYBOOK</span>
+    </div>
+
+    <div class="header-right">
+        DIGITAL READING
+    </div>
+
+</header>
+
+
+<main>
+
+    <div class="intro">
+
+        <div>
+            <h1>我的繪本</h1>
+            <p>翻開故事，走進另一個世界。</p>
+        </div>
+
+        <div class="chapter">
+            STORY · 01
+        </div>
+
+    </div>
+
+
+    <section class="reader">
+
+        <!-- 繪本圖片 -->
+
+        <div class="picture-area">
+
+            <img
+                id="bookImage"
+                src="./graphics/0.jpg"
+                alt="繪本第1頁"
+            >
+
+            <div
+                class="image-page"
+                id="imagePage"
+            >
+                PAGE 01
+            </div>
+
+        </div>
+
+
+        <!-- 翻頁控制 -->
+
+        <div class="controls">
+
+            <div class="page-info">
+
+                <span id="currentPage">01</span>
+
+                <span id="totalPage">/ 20</span>
+
+                <div class="progress">
+
+                    <div id="progressBar"></div>
+
+                </div>
+
+            </div>
+
+
+            <div class="buttons">
+
+                <button
+                    class="arrow"
+                    id="prev"
+                    aria-label="上一頁"
+                >
+                    ‹
+                </button>
+
+                <button
+                    class="arrow"
+                    id="next"
+                    aria-label="下一頁"
+                >
+                    ›
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- 音訊設定：預設收起 -->
+
+        <div class="audio-section">
+
+            <div class="audio-toggle">
+
+                <span>♪ 本頁音訊</span>
+
+                <button id="audioToggle">
+                    展開音訊 ＋
+                </button>
+
+            </div>
+
+
+            <div
+                class="audio-content"
+                id="audioContent"
+            >
+
+                <div class="audio-card">
+
+                    <label>背景音樂</label>
+
+                    <audio
+                        id="musicPlayer"
+                        controls
+                        preload="none"
+                    ></audio>
+
+                </div>
+
+
+                <div class="audio-card">
+
+                    <label>課文朗讀</label>
+
+                    <audio
+                        id="speechPlayer"
+                        controls
+                        preload="none"
+                    ></audio>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- 頁碼選擇 -->
+
+    <details class="page-selector">
+
+        <summary>選擇閱讀頁面</summary>
+
+        <div
+            class="page-list"
+            id="pageList"
+        ></div>
+
+    </details>
+
+</main>
+
+
+<footer>
+    MY STORYBOOK · A LITTLE WORLD OF STORIES
+</footer>
+
+
+<script>
+
+// =====================================
+// 1. 基本設定
+// =====================================
+
+const totalPages = 20;
+
+let currentPage = 0;
+
+
+// =====================================
+// 2. 三個獨立資料夾
+// =====================================
+
+// 圖片資料夾
+
+const graphicsFolder = "./graphics/";
+
+// 音樂資料夾
+
+const musicFolder = "./music/";
+
+// 課文朗讀資料夾
+
+const speechFolder = "./speech/";
+
+
+// =====================================
+// 3. 音檔名稱
+// =====================================
+
+// music0.mp3 ～ music19.mp3
+
+function getMusicPath(page) {
+
+    return musicFolder + "music" + page + ".mp3";
+
+}
+
+
+// speech0.mp3 ～ speech19.mp3
+
+function getSpeechPath(page) {
+
+    return speechFolder + "speech" + page + ".mp3";
+
+}
+
+
+// =====================================
+// 4. 網頁元素
+// =====================================
+
+const bookImage = document.getElementById("bookImage");
+
+const currentPageText = document.getElementById("currentPage");
+
+const totalPageText = document.getElementById("totalPage");
+
+const imagePage = document.getElementById("imagePage");
+
+const progressBar = document.getElementById("progressBar");
+
+const prevButton = document.getElementById("prev");
+
+const nextButton = document.getElementById("next");
+
+const musicPlayer = document.getElementById("musicPlayer");
+
+const speechPlayer = document.getElementById("speechPlayer");
+
+const pageList = document.getElementById("pageList");
+
+const audioToggle = document.getElementById("audioToggle");
+
+const audioContent = document.getElementById("audioContent");
+
+
+// =====================================
+// 5. 建立頁碼按鈕
+// =====================================
+
+for (let i = 0; i < totalPages; i++) {
+
+    const button = document.createElement("button");
+
+    button.textContent = String(i + 1).padStart(2, "0");
+
+    button.onclick = function () {
+
+        changePage(i);
+
+    };
+
+    pageList.appendChild(button);
+
+}
+
+
+// =====================================
+// 6. 音訊區展開與收起
+// =====================================
+
+audioToggle.onclick = function () {
+
+    audioContent.classList.toggle("show");
+
+    const isOpen = audioContent.classList.contains("show");
+
+    if (isOpen) {
+
+        audioToggle.textContent = "收起音訊 −";
+
+    } else {
+
+        audioToggle.textContent = "展開音訊 ＋";
+
+    }
+
+};
+
+
+// =====================================
+// 7. 播放本頁音訊
+// =====================================
+
+function playAudio() {
+
+    // 音樂
+
+    musicPlayer.play().catch(function () {
+
+        console.log("音樂播放需要使用者操作");
+
+    });
+
+    // 朗讀
+
+    speechPlayer.play().catch(function () {
+
+        console.log("朗讀播放需要使用者操作");
+
+    });
+
+}
+
+
+// =====================================
+// 8. 切換頁面
+// =====================================
+
+function changePage(newPage) {
+
+    // 限制頁數
+
+    if (newPage < 0) {
+
+        newPage = 0;
+
+    }
+
+    if (newPage >= totalPages) {
+
+        newPage = totalPages - 1;
+
+    }
+
+
+    // 設定目前頁數
+
+    currentPage = newPage;
+
+
+    // =================================
+    // 更新圖片
+    // =================================
+
+    bookImage.src =
+        graphicsFolder + currentPage + ".jpg";
+
+    bookImage.alt =
+        "繪本第" + (currentPage + 1) + "頁";
+
+
+    // =================================
+    // 更新頁碼文字
+    // =================================
+
+    const page = currentPage + 1;
+
+    const formattedPage = String(page).padStart(2, "0");
+
+    currentPageText.textContent = formattedPage;
+
+    imagePage.textContent = "PAGE " + formattedPage;
+
+    totalPageText.textContent =
+        "/ " + totalPages;
+
+
+    // =================================
+    // 更新閱讀進度
+    // =================================
+
+    const progress =
+        ((currentPage + 1) / totalPages) * 100;
+
+    progressBar.style.width = progress + "%";
+
+
+    // =================================
+    // 停止上一頁音訊
+    // =================================
+
+    musicPlayer.pause();
+
+    speechPlayer.pause();
+
+    musicPlayer.currentTime = 0;
+
+    speechPlayer.currentTime = 0;
+
+
+    // =================================
+    // 更新音樂
+    // =================================
+
+    musicPlayer.src = getMusicPath(currentPage);
+
+
+    // =================================
+    // 更新朗讀
+    // =================================
+
+    speechPlayer.src = getSpeechPath(currentPage);
+
+
+    // =================================
+    // 更新翻頁按鈕
+    // =================================
+
+    prevButton.disabled = currentPage === 0;
+
+    nextButton.disabled =
+        currentPage === totalPages - 1;
+
+
+    // =================================
+    // 更新頁碼按鈕
+    // =================================
+
+    const buttons = pageList.children;
+
+    for (let i = 0; i < buttons.length; i++) {
+
+        buttons[i].classList.toggle(
+            "active",
+            i === currentPage
+        );
+
+    }
+
+
+    // =================================
+    // 翻頁後自動播放
+    // =================================
+
+    playAudio();
+
+}
+
+
+// =====================================
+// 9. 上一頁
+// =====================================
+
+prevButton.onclick = function () {
+
+    changePage(currentPage - 1);
+
+};
+
+
+// =====================================
+// 10. 下一頁
+// =====================================
+
+nextButton.onclick = function () {
+
+    changePage(currentPage + 1);
+
+};
+
+
+// =====================================
+// 11. 鍵盤翻頁
+// =====================================
+
+document.addEventListener("keydown", function (event) {
+
+    if (event.key === "ArrowLeft") {
+
+        changePage(currentPage - 1);
+
+    }
+
+    if (event.key === "ArrowRight") {
+
+        changePage(currentPage + 1);
+
+    }
+
+});
+
+
+// =====================================
+// 12. 開啟第一頁
+// =====================================
+
+totalPageText.textContent = "/ " + totalPages;
+
+changePage(0);
+
+</script>
+
+</body>
+</html>
